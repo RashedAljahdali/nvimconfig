@@ -14,7 +14,7 @@ return {
     lazy = false,
     config = function()
       require("mason-lspconfig").setup({
-        ensure_installed = { "pyright", "rust_analyzer", "lua_ls", "clangd", "gopls" , "html"},
+        ensure_installed = { "pyright", "rust_analyzer", "lua_ls", "clangd", "gopls", "ts_ls" },
         automatic_installation = true,
         automatic_enable = false,
       })
