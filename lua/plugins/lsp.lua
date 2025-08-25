@@ -30,11 +30,10 @@ return {
 
       -- Diagnostic configuration
       vim.diagnostic.config({
-        virtual_text = true,
-        signs = true,
+        virtual_text = false,
+        signs = false,
         underline = true,
         update_in_insert = false,
-        severity_sort = true,
       })
 
       -- on_attach function runs when LSP attaches to a buffer
@@ -172,17 +171,18 @@ return {
   -- Trouble: diagnostics UI
   {
     "folke/trouble.nvim",
-    cmd = "TroubleToggle",
+    cmd = "Trouble",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {},
-    keys = {
-      { "<leader>xx", "<cmd>TroubleToggle<cr>", desc = "Toggle Trouble" },
-      { "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
-      { "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>", desc = "Document Diagnostics" },
-      { "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", desc = "Quickfix List" },
-      { "<leader>xl", "<cmd>TroubleToggle loclist<cr>", desc = "Location List" },
-      { "gR", "<cmd>TroubleToggle lsp_references<cr>", desc = "LSP References" },
-    },
+keys = {
+  { "<leader>xx", "<cmd>Trouble diagnostics<cr>", desc = "Toggle Trouble" },
+  { "<leader>xb", "<cmd>Trouble close<cr>", desc = "close Trouble" },
+  { "<leader>xw", "<cmd>Trouble workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
+  { "<leader>xd", "<cmd>Trouble document_diagnostics<cr>", desc = "Document Diagnostics" },
+  { "<leader>xq", "<cmd>Trouble quickfix<cr>", desc = "Quickfix List" },
+  { "<leader>xl", "<cmd>Trouble loclist<cr>", desc = "Location List" },
+  { "gR", "<cmd>Trouble lsp_references<cr>", desc = "LSP References" },
+},
   },
 
   -- Crates.nvim for Cargo.toml
