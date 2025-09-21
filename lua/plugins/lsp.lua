@@ -23,110 +23,144 @@ return {
 
   -- LSP Config
   {
-    "neovim/nvim-lspconfig",
-    config = function()
-      local lspconfig = require("lspconfig")
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-      -- Diagnostic configuration
-      vim.diagnostic.config({
-        virtual_text = false,
-        signs = false,
-        underline = true,
-        update_in_insert = false,
-      })
-
-      -- on_attach function runs when LSP attaches to a buffer
-      local on_attach = function(client, bufnr)
-        -- Enable inlay hints if supported
-        if client.server_capabilities.inlayHintProvider
-            and not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }) then
-          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-        end
-
-        -- Rust: format asynchronously on save
-        if client.name == "rust_analyzer" and client.server_capabilities.documentFormattingProvider then
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            group = vim.api.nvim_create_augroup("RustFormat", { clear = true }),
-            buffer = bufnr,
-            callback = function()
-              vim.lsp.buf.format({ async = true })
-            end,
-          })
-        end
-
-        -- Go: organize imports and format synchronously on save
-        if client.name == "gopls" and client.server_capabilities.documentFormattingProvider then
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            group = vim.api.nvim_create_augroup("GoFormat", { clear = true }),
-            buffer = bufnr,
-            callback = function()
-              -- Organize imports
-              local params = vim.lsp.util.make_range_params()
-              params.context = { only = { "source.organizeImports" } }
-              local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 3000)
-              for _, res in pairs(results or {}) do
-                for _, r in pairs(res.result or {}) do
-                  if r.edit then
-                    vim.lsp.util.apply_workspace_edit(r.edit, "utf-16")
-                  end
+  "neovim/nvim-lspconfig",
+  config = function()
+    local capabilities = require("cmp_nvim_lsp").default_capabilities()
+    
+    -- Diagnostic configuration
+    vim.diagnostic.config({
+      virtual_text = false,
+      signs = false,
+      underline = true,
+      update_in_insert = false,
+    })
+    
+    -- on_attach function runs when LSP attaches to a buffer
+    local on_attach = function(client, bufnr)
+      -- Enable inlay hints if supported
+      if client.server_capabilities.inlayHintProvider
+          and not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }) then
+        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+      end
+      
+      -- Rust: format asynchronously on save
+      if client.name == "rust_analyzer" and client.server_capabilities.documentFormattingProvider then
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          group = vim.api.nvim_create_augroup("RustFormat", { clear = true }),
+          buffer = bufnr,
+          callback = function()
+            vim.lsp.buf.format({ async = true })
+          end,
+        })
+      end
+	if client.name == "gopls" and client.server_capabilities.documentFormattingProvider then
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          group = vim.api.nvim_create_augroup("GoFormat", { clear = true }),
+          buffer = bufnr,
+          callback = function()
+            -- Organize imports
+            local params = vim.lsp.util.make_range_params()
+            params.context = { only = { "source.organizeImports" } }
+            local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 3000)
+            for _, res in pairs(results or {}) do
+              for _, r in pairs(res.result or {}) do
+                if r.edit then
+                  vim.lsp.util.apply_workspace_edit(r.edit, "utf-16")
                 end
               end
-              -- Format buffer
-              vim.lsp.buf.format({ async = false })
-            end,
-          })
-        end
-
-        -- Setup Lua language server settings inside on_attach
-        if client.name == "lua_ls" then
-          lspconfig.lua_ls.setup({
-            settings = {
-              Lua = {
-                runtime = {
-                  version = "LuaJIT",
-                  path = vim.split(package.path, ";"),
-                },
-                diagnostics = {
-                  globals = { "vim" },
-                },
-                workspace = {
-                  library = vim.api.nvim_get_runtime_file("", true),
-                  checkThirdParty = false,
-                },
-                telemetry = {
-                  enable = false,
-                },
-              },
-            },
-          })
-        end
+            end
+            -- Format buffer
+            vim.lsp.buf.format({ async = false })
+          end,
+        })
       end
-
-      -- Servers to configure
-      local servers = { "pyright", "lua_ls", "rust_analyzer", "clangd", "gopls" , "html", "ts_ls", "cssls"}
-      for _, server in ipairs(servers) do
-        local opts = {
-          capabilities = capabilities,
-          on_attach = on_attach,
-        }
-
-        -- Additional rust-analyzer settings
-        if server == "rust_analyzer" then
-          opts.settings = {
-            ["rust-analyzer"] = {
-              inlayHints = {
-                typeHints = true,
-              },
-            },
-          }
-        end
-
-        lspconfig[server].setup(opts)
-      end
-    end,
-  },
-
+    end
+    -- Configure language servers using vim.lsp.config()
+    vim.lsp.config('pyright', {
+      cmd = { 'pyright-langserver', '--stdio' },
+      filetypes = { 'python' },
+      root_markers = { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', 'pyrightconfig.json', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+    vim.lsp.config('lua_ls', {
+      cmd = { 'lua-language-server' },
+      filetypes = { 'lua' },
+      root_markers = { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', 'selene.toml', 'selene.yml', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+      settings = {
+        Lua = {
+          runtime = {
+            version = "LuaJIT",
+            path = vim.split(package.path, ";"),
+          },
+          diagnostics = {
+            globals = { "vim" },
+          },
+          workspace = {
+            library = vim.api.nvim_get_runtime_file("", true),
+            checkThirdParty = false,
+          },
+          telemetry = {
+            enable = false,
+          },
+        },
+      },
+    })
+    vim.lsp.config('rust_analyzer', {
+      cmd = { 'rust-analyzer' },
+      filetypes = { 'rust' },
+      root_markers = { 'Cargo.toml', 'rust-project.json', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+      settings = {
+        ["rust-analyzer"] = {
+          inlayHints = {
+            typeHints = true,
+          },
+        },
+      },
+    })
+    vim.lsp.config('clangd', {
+      cmd = { 'clangd' },
+      filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
+      root_markers = { '.clangd', '.clang-tidy', '.clang-format', 'compile_commands.json', 'compile_flags.txt', 'configure.ac', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+    vim.lsp.config('gopls', {
+      cmd = { 'gopls' },
+      filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+      root_markers = { 'go.work', 'go.mod', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+    vim.lsp.config('html', {
+      cmd = { 'vscode-html-language-server', '--stdio' },
+      filetypes = { 'html' },
+      root_markers = { 'package.json', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+    vim.lsp.config('ts_ls', {
+      cmd = { 'typescript-language-server', '--stdio' },
+      filetypes = { 'javascript', 'javascriptreact', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx' },
+      root_markers = { 'tsconfig.json', 'package.json', 'jsconfig.json', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+    vim.lsp.config('cssls', {
+      cmd = { 'vscode-css-language-server', '--stdio' },
+      filetypes = { 'css', 'scss', 'less' },
+      root_markers = { 'package.json', '.git' },
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+    -- Enable all configured language servers
+    vim.lsp.enable({ 'pyright', 'lua_ls', 'rust_analyzer', 'clangd', 'gopls', 'html', 'ts_ls', 'cssls' })
+  end,
+},
   -- Completion engine
   {
     "hrsh7th/nvim-cmp",
