@@ -51,19 +51,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		map("n", "<F4>", vim.lsp.buf.code_action, opts)
 	end,
 })
-vim.api.nvim_set_keymap('n' , '<leader>b','<C-o>',{noremap = false , silent = true})
-vim.keymap.set('n', '<leader>err', function()
-  local row = vim.fn.line('.')
-  local indent = vim.fn.indent(vim.fn.line('.'))
-  local indent_str = string.rep(' ', indent) -- spaces by default
+vim.api.nvim_set_keymap("n", "<leader>b", "<C-o>", { noremap = false, silent = true })
+vim.keymap.set("n", "<leader>err", function()
+	local row = vim.fn.line(".")
+	local indent = vim.fn.indent(vim.fn.line("."))
+	local indent_str = string.rep(" ", indent) -- spaces by default
 
+	vim.fn.append(row, {
+		indent_str .. "if err != nil {",
+		indent_str .. "\t",
+		indent_str .. "}",
+	})
 
-  vim.fn.append(row, {
-    indent_str .. 'if err != nil {',
-    indent_str .. '\t',
-    indent_str .. '}',
-  })
-
-  -- Move cursor inside block
-  vim.api.nvim_win_set_cursor(0, { row + 2, indent + 1 })
+	-- Move cursor inside block
+	vim.api.nvim_win_set_cursor(0, { row + 2, indent + 1 })
 end, { noremap = true, silent = true })
